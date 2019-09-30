@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+html(lang="en")
+    head
+        meta(charset="UTF-8")
+        title Form
+    body
+        form(action="/" method="POST")
+            label
+                |  #{fieldName}
+            br
+            input(type="text", name=fieldName)
+            button(type="submit") Submit

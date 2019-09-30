@@ -1,38 +1,23 @@
-/**
- *
- * Не использовал PUG т.к не успел разобраться с синтаксисом
- * Постараюсь разобраться за выходные и добавить
- */
-
 const http = require('http');
-const url = require('url');
+
+const pug = require('pug');
+
+const formPage = pug.compileFile('./views/form.pug');
+const resultPage = pug.compileFile('./views/result.pug');
 
 const server = http.createServer((req, res) => {
   console.log('request', req.url, req.method);
 
-  const urlParsed = url.parse(req.url, true);
-
-  let fieldName = 'default';
-  if (urlParsed.query.fieldName) {
-    fieldName = urlParsed.query.fieldName;
-  }
+  // const urlParsed = url.parse(req.url, true);
+  const urlParsed = new URL(req.url, 'http://localhost:5000/');
 
   if (urlParsed.pathname === '/' && req.method === 'GET') {
     res.setHeader('content-type', 'text/html');
-    res.write(`
-            <html>
-                <head>
-                    <meta charset="utf-8" />
-                </head>
-                <body>
-                    <form action="/" method="post">
-                        <label>${fieldName}</label><br>
-                        <input type="text" name="${fieldName}" />
-                        <input type="submit">
-                    </form>
-                </body>
-            </html>
-        `);
+    res.write(
+        formPage({
+          fieldName: urlParsed.searchParams.get('fieldName') || 'default'
+        })
+    );
     res.end();
   } else if (urlParsed.pathname === '/' && req.method === 'POST') {
     let postData = '';
@@ -46,20 +31,15 @@ const server = http.createServer((req, res) => {
 
     req.on('end', () => {
       try {
-        const DataArr = postData.split('=');
+        const dataArr = postData.split('=');
 
         res.setHeader('content-type', 'text/html');
-        res.write(`
-                    <html>
-                        <head>
-                           <meta charset="utf-8" />
-                        </head>
-                        <body>
-                            <h4>Result:</h4>
-                            <p><b>Field name:</b> ${DataArr[0]} <b>Value:</b> ${DataArr[1]}</p>
-                        </body>
-                    </html>
-                `);
+        res.write(
+            resultPage({
+              fieldName: dataArr[0],
+              value: dataArr[1]
+            })
+        );
         res.end();
       } catch (error) {
         res.statusCode = 400;
@@ -71,5 +51,6 @@ const server = http.createServer((req, res) => {
     res.end('Page not found');
   }
 });
+
 server.listen(5000);
 console.log('Server running at http://127.0.0.1:5000/');
